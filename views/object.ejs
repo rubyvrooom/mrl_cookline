@@ -1,0 +1,187 @@
+<%
+
+/**
+* Copyright 2012 Facebook, Inc.
+*
+* You are hereby granted a non-exclusive, worldwide, royalty-free license to
+* use, copy, modify, and distribute this software in source code or binary
+* form for use in connection with the web services and APIs provided by
+* Facebook.
+*
+* As with any software that integrates with the Facebook platform, your use
+* of this software is subject to the Facebook Developer Principles and
+* Policies [http://developers.facebook.com/policy/]. This copyright notice
+* shall be included in all copies or substantial portions of the software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+* DEALINGS IN THE SOFTWARE.
+*
+*/
+
+%><!doctype html>
+<html>
+
+  <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# cookline: http://ogp.me/ns/fb/cookline#">
+    <meta charset="utf-8">
+    <title><%= title %></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <meta property="fb:app_id"      content="<%= app_id %>" />
+    <meta property="og:type"        content="<%= type %>" />
+    <meta property="og:url"         content="<%= url %>" />
+    <meta property="og:title"       content="<%= title %>" />
+    <meta property="og:description" content="<%= description %>" />
+    <meta property="og:image"       content="<%= image %>" />
+
+    <% if (ingredients) {
+      ingredients.forEach(function(ingredient) {
+        %>
+          <meta property="cookline:ingredients" content="<%= objectUrl('ingredient', ingredient) %>" />
+        <%
+      });
+    } %>
+
+    <style>
+      html {
+        background: #fff;
+      }
+      body {
+        background: #e0e0e0;
+        font-family: sans-serif;
+        margin: auto;
+        width:320px;
+        text-align:center;
+        padding-bottom:80px;
+      }
+      nav {
+        background: #000;
+        font-size:18px;
+        padding:8px;
+      }
+      nav a {
+        color:#fff;
+        text-decoration:none;
+        margin:0px 8px;
+      }
+      img {
+        border-radius: 8px;
+        box-shadow:0 2px 8px #666;
+        max-width:260px;
+        max-height:200px;
+      }
+      article {
+        text-shadow:0 1px #fff;
+      }
+      button {
+        background:#777;
+        border-radius: 18px;
+        padding:10px;
+        font-size:18px;
+        border:2px solid #fff;
+        box-shadow:0 2px 8px #666;
+        color:#fff;
+        text-shadow:0 1px #333;
+        display:none;
+      }
+
+    </style>
+
+  </head>
+
+  <body>
+
+    <nav>
+      <% for (dish in dishes) {
+        if (dishes[dish].title != title) {
+          %>
+            <a href="<%= objectUrl('dish', dish) %>"><%= dishes[dish].title %></a>
+          <%
+        }
+      }; %>
+    </nav>
+
+    <article>
+      <h1><%= title %></h1>
+        <img src='<%=image%>' />
+      <p><%= description %></p>
+      <button id='login'>Login</button>
+      <button id='cook'>Cook</button>
+      <button id='logout'>Logout</button>
+    </article>
+
+  </body>
+
+  <script>
+    window.addEventListener('load', function() {
+      setTimeout(function() { window.scrollTo(0, 1) }, 100);
+    });
+  </script>
+
+    <div id="fb-root"></div>
+    <script>
+      window.fbAsyncInit = function() {
+
+        var login = document.getElementById('login');
+        var cook = document.getElementById('cook');
+        var logout = document.getElementById('logout');
+
+        FB.init({
+          appId: '294113397324835',
+          status: true,
+          cookie: true
+        });
+
+        login.addEventListener('click', function() {
+          FB.login(function(rsp) {
+            console.log(rsp);
+          }, {scope:'publish_actions'});
+        });
+
+        logout.addEventListener('click', function() {
+          FB.logout();
+        });
+
+        cook.addEventListener('click', function() {
+    			FB.api('/me/cookline:cook', 'POST', {
+    				"dish": "<%= url %>"
+    			}, function(rsp){
+            console.log(rsp);
+            alert("Congratulations! You cooked <%= title %>.");
+          });
+        });
+
+    		FB.Event.subscribe('auth.statusChange', function(rsp) {
+          console.log(rsp);
+    			if (rsp.authResponse) {
+    				FB.api('/me', function(me) {
+              login.style.display = 'none';
+              cook.style.display = 'inline';
+              cook.innerHTML = 'Cook, ' + me.first_name + '!';
+              logout.style.display = 'inline';
+            });
+    			} else {
+            login.style.display = 'inline';
+            cook.style.display = 'none';
+            cook.innerHTML = 'Cook';
+            logout.style.display = 'none';
+    			}
+    		});
+
+      };
+
+      (function(d){
+        var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+        if (d.getElementById(id)) {return;}
+        js = d.createElement('script'); js.id = id; js.async = true;
+        js.src = "//connect.facebook.net/en_US/all.js";
+        ref.parentNode.insertBefore(js, ref);
+      }(document));
+    </script>
+
+</html>
